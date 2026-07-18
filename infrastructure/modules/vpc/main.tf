@@ -29,3 +29,122 @@ resource "aws_internet_gateway" "rails" {
   )
 
 }
+
+resource "aws_subnet" "public" {
+
+  count = length(var.public_subnets)
+  
+  vpc_id = aws_vpc.rails.id
+  cidr_block = var.public_subnets[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  map_customer_owned_ip_on_launch = true
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-public-${count.index + 1}"
+      Tier = "Public"
+    }
+  )
+}
+
+resource "aws_subnet" "private_app" {
+  
+  count = length(var.private_app_subnets)
+
+  vpc_id = aws_vpc.rails.id
+  cidr_block = var.private_app_subnets[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-private-app-${count.index + 1}"
+      Tier = "Application"
+    }
+  )
+}
+
+resource "aws_subnet" "private_db" {
+  
+  count = length(var.private_db_subnets)
+
+  vpc_id = aws_vpc.rails.id
+  cidr_block = var.private_db_subnets[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-private-db-${count.index + 1}"
+      Tier = "Database"
+    }
+  )
+}
+
+resource "aws_eip" "nat" {
+
+  domain = "vpc"
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-nat-eip"
+    }
+  )
+}
+
+resource "aws_nat_gateway" "rails" {
+
+  allocation_id = aws_eip.nat.id
+  subnet_id = aws_subnet.public[0].id
+
+  depends_on = [ 
+    aws_internet_gateway.rails
+  ]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-nat"
+    }
+  ) 
+}
+
+resource "aws_route_table" "public" {
+
+  vpc_id = aws_vpc.rails.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.rails.id
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-public-rt"
+    }
+  )
+}
+  
+resource "aws_route_table" "private" {
+
+  vpc_id = aws_vpc.rails.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.rails.id
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-private-rt"
+    }
+  )
+}
+  
+
+
+
