@@ -33,11 +33,11 @@ resource "aws_internet_gateway" "rails" {
 resource "aws_subnet" "public" {
 
   count = length(var.public_subnets)
-  
-  vpc_id = aws_vpc.rails.id
-  cidr_block = var.public_subnets[count.index]
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  map_customer_owned_ip_on_launch = true
+
+  vpc_id                          = aws_vpc.rails.id
+  cidr_block                      = var.public_subnets[count.index]
+  availability_zone               = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = true
 
   tags = merge(
     local.common_tags,
@@ -49,11 +49,11 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private_app" {
-  
+
   count = length(var.private_app_subnets)
 
-  vpc_id = aws_vpc.rails.id
-  cidr_block = var.private_app_subnets[count.index]
+  vpc_id            = aws_vpc.rails.id
+  cidr_block        = var.private_app_subnets[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
@@ -66,11 +66,11 @@ resource "aws_subnet" "private_app" {
 }
 
 resource "aws_subnet" "private_db" {
-  
+
   count = length(var.private_db_subnets)
 
-  vpc_id = aws_vpc.rails.id
-  cidr_block = var.private_db_subnets[count.index]
+  vpc_id            = aws_vpc.rails.id
+  cidr_block        = var.private_db_subnets[count.index]
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
@@ -97,9 +97,9 @@ resource "aws_eip" "nat" {
 resource "aws_nat_gateway" "rails" {
 
   allocation_id = aws_eip.nat.id
-  subnet_id = aws_subnet.public[0].id
+  subnet_id     = aws_subnet.public[0].id
 
-  depends_on = [ 
+  depends_on = [
     aws_internet_gateway.rails
   ]
 
@@ -108,7 +108,7 @@ resource "aws_nat_gateway" "rails" {
     {
       Name = "${local.name_prefix}-nat"
     }
-  ) 
+  )
 }
 
 resource "aws_route_table" "public" {
@@ -127,13 +127,13 @@ resource "aws_route_table" "public" {
     }
   )
 }
-  
+
 resource "aws_route_table" "private" {
 
   vpc_id = aws_vpc.rails.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.rails.id
   }
 
@@ -144,7 +144,7 @@ resource "aws_route_table" "private" {
     }
   )
 }
-  
+
 
 
 

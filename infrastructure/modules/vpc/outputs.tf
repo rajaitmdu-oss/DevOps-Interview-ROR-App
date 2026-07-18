@@ -1,5 +1,5 @@
 output "vpc_id" {
-  value = aws_vpc.rails.id  
+  value = aws_vpc.rails.id
 }
 
 output "public_subnet_ids" {
