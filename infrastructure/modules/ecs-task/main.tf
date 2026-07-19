@@ -28,6 +28,41 @@ resource "aws_ecs_task_definition" "rails" {
         }
       ]
 
+      environment = [
+        {
+          name  = "RDS_DB_NAME"
+          value = var.db_name
+        },
+        {
+          name  = "RDS_USERNAME"
+          value = var.db_username
+        },
+        {
+          name  = "RDS_PASSWORD"
+          value = var.db_password
+        },
+        {
+          name  = "RDS_HOSTNAME"
+          value = var.db_host
+        },
+        {
+          name  = "RDS_PORT"
+          value = "5432"
+        },
+        {
+          name  = "S3_BUCKET_NAME"
+          value = var.bucket_name
+        },
+        {
+          name  = "S3_REGION_NAME"
+          value = var.aws_region
+        },
+        {
+          name  = "LB_ENDPOINT"
+          value = var.lb_endpoint
+        }
+      ]
+
       logConfiguration = {
         logDriver = "awslogs"
 
@@ -42,3 +77,4 @@ resource "aws_ecs_task_definition" "rails" {
 
   tags = local.common_tags
 }
+

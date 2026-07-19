@@ -59,6 +59,8 @@ module "iam" {
 
   project_name = var.project_name
   environment  = var.environment
+
+  bucket_arn = module.s3.bucket_arn
 }
 
 module "cloudwatch" {
@@ -96,6 +98,14 @@ module "ecs_task" {
   task_role_arn      = module.iam.task_role_arn
 
   log_group_name = module.cloudwatch.log_group_name
+
+  db_host     = module.rds.db_endpoint
+  db_name     = module.rds.db_name
+  db_username = var.db_username
+  db_password = var.db_password
+  bucket_name = module.s3.bucket_name
+
+  lb_endpoint = module.alb.dns_name
 }
 
 module "aws_ecs_service" {
@@ -113,4 +123,12 @@ module "aws_ecs_service" {
   ecs_security_group_id = module.security_group.ecs_security_group_id
 
   private_app_subnet_ids = module.vpc.private_app_subnet_ids
+}
+
+module "s3" {
+
+  source = "./modules/s3"
+
+  project_name = var.project_name
+  environment  = var.environment
 }

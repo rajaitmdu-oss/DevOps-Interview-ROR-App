@@ -17,7 +17,7 @@ resource "aws_db_instance" "rails" {
   identifier = "${local.name_prefix}-postgres"
 
   engine         = "postgres"
-  engine_version = "13.3"
+  engine_version = "15.18"
 
   instance_class = "db.t3.micro"
 

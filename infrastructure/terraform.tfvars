@@ -21,4 +21,4 @@ private_db_subnets = [
 
 db_name     = "rails"
 db_username = "postgres"
-db_password = "YourStrongPassword123!"
+db_password = "Gres2026!Jul07"

@@ -9,3 +9,7 @@ output "target_group_arn" {
 output "listener_arn" {
   value = aws_lb_listener.http.arn
 }
+
+output "dns_name" {
+  value = aws_lb.rails.dns_name
+}
