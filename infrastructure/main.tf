@@ -97,3 +97,20 @@ module "ecs_task" {
 
   log_group_name = module.cloudwatch.log_group_name
 }
+
+module "aws_ecs_service" {
+
+  source = "./modules/ecs-service"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  cluster_id          = module.ecs.cluster_id
+  task_definition_arn = module.ecs_task.task_definition_arn
+
+  target_group_arn = module.alb.target_group_arn
+
+  ecs_security_group_id = module.security_group.ecs_security_group_id
+
+  private_app_subnet_ids = module.vpc.private_app_subnet_ids
+}
