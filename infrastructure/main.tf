@@ -107,7 +107,6 @@ module "ecs_task" {
 
   lb_endpoint = module.alb.dns_name
 }
-
 module "aws_ecs_service" {
 
   source = "./modules/ecs-service"

@@ -1,90 +1,401 @@
-# README
+# AWS ECS Deployment using Terraform - Ruby on Rails Application
 
-# DevOps Assignment: Host Docker ROR Application with Nginx in AWS using IaC
+## Overview
 
-## Introduction
+This project demonstrates deploying a Dockerized Ruby on Rails application on AWS using Infrastructure as Code (Terraform).
 
-This assignment aims to demonstrate the process of deploying a Dockerized Ruby on Rails application with Nginx in AWS with Loadbalancer and RDS using IaC.
+The application is deployed using AWS ECS Fargate with an Application Load Balancer, Amazon RDS PostgreSQL, Amazon S3, and Amazon ECR.
 
-### Guideline for the assignment submission
+The infrastructure follows AWS best practices:
 
-1. Fork this repo into your GitHub account. Setup the build process from the source code. Build process should generate a Docker image and upload it to AWS ECR.
-2. Create a new folder named "infrastructure" in the root of the project and push your IaC code under this folder.
-3. Prepare a Terraform/CloudFormation/CDK script to provision the scalable infrastructure in AWS ECS/EKS using this ECR image. You need to use ELB to distribute the traffic between servers. All the resources should be hosted in private subnet except load balancer.
-4. The web application will integrate with database and S3. So you may need to create a RDS instance (Postgres) and S3 bucket and use them as ENV variable in ECS. Required ENV names will be mentioned in Github repo’s README. Application should integrate with S3 using IAM role authentication, not AccessKey and SecretKey. Application should integrate with RDS using database credentials (Host, DB name, Username and Password).
-5. It should also contain a ReadMe file with cleardetails about how to use and create the Infrastructure with this IaC code.
-6. Prepare an architecture diagram, deployment steps, and any other relevant information in the same folder.
-7. Share a GitHub repository to Github account “Mallowtechdev” and send an email to HR team (hr@mallow-tech.com) about the completion along with Github repository link and branch details.
+* Load Balancer hosted in public subnets
+* ECS workloads hosted in private application subnets
+* Database hosted in private database subnets
+* IAM Role based access for S3 (No AWS Access Key / Secret Key)
+* Docker image build and deployment through GitHub Actions
 
+---
 
-### Iac Structure
+# Architecture
 
-    ...
-    ├── infrastructure
-    │   ├──  ( # IaC Code files )
-    │   │   ...
-    │   │   ...
-    │   ├──  ReadMe
-    │   ├──  Architecture diagram
-    │   ├──  Other documentation files
-    │   ...              
-    ...
+The deployment architecture contains the following AWS services:
 
+## CI/CD Flow
 
-### Prerequisites
-
-1. AWS Account with appropriate permissions.
-2. RDS Postgres 13.3 Database ( update the credentials in the below mentioned Environment variables)
-3. LoadBalancer  ( update the loadbalancer endpoint in the environment variable)
-4. Docker installed in your local machine.
-5. Your preferred IaC tool ( Terraform, CDK, CloudFormation)
-6. Other local tools if required.
-
-### Version details:
-
-* Ruby version - `3.2.2`
-* Rails version - `7.0.5`
-* Database - `Postgresql - 13.3`
-
-### Docker conatiner details
-
-* Rails container running in port 3000
-* Nginx container running in port 80
-* You can use the container alias name "rails_app" to for the nginx to send request to rails container
-
-
-### Docker Folder Structure
-
-    ...
-    ├── docker
-    │   ├── app
-    │   │   ├── Dockerfile         # Rails container dockerfile
-    │   │   └── entrypoint.sh      # Rails container entrypoint
-    │   └── nginx
-    │       ├── default.conf       # Nginx config file
-    │       └── Dockerfile         # Nginx container dockerfile
-    │                   
-    ├── docker-compose.yml         # docker-compose file
-    ...
-
-### Environment variable for Ruby container
-
-```env
-RDS_DB_NAME="postgres database name"
-RDS_USERNAME="postgres db user name"
-RDS_PASSWORD="postgres db password"
-RDS_HOSTNAME="postgres db hostname"
-RDS_PORT="postgres db port"
-S3_BUCKET_NAME="s3 bucket name"
-S3_REGION_NAME="s3 region name"
-LB_ENDPOINT="loadbalancer endpoint without http"
+```
+Developer
+    |
+    |
+GitHub Repository
+    |
+    |
+GitHub Actions
+    |
+    |
+Docker Build
+    |
+    |
+Amazon ECR
+    |
+    |
+ECS Task Definition
+    |
+    |
+ECS Service
 ```
 
-### Environment variable for Nginx container
+---
 
-```env
-nil
+## AWS Infrastructure
+
+```
+                         Internet
+                            |
+                            |
+                 Application Load Balancer
+                    (Public Subnets)
+                            |
+              --------------------------------
+              |                              |
+          ECS Task 1                     ECS Task 2
+        (Private Subnet)              (Private Subnet)
+              |
+              |
+       ------------------
+       |                |
+    RDS PostgreSQL     Amazon S3
+    (Private DB)     (Object Storage)
+
+              |
+              |
+        CloudWatch Logs
 ```
 
-### Note
-This README is a guideline and should be adjusted based on your specific setup and requirements.
+---
+
+# AWS Services Used
+
+| Service                   | Purpose                                      |
+| ------------------------- | -------------------------------------------- |
+| Amazon VPC                | Network isolation                            |
+| Public Subnets            | ALB hosting                                  |
+| Private Subnets           | ECS application hosting                      |
+| Private DB Subnets        | RDS database hosting                         |
+| Internet Gateway          | Public internet access                       |
+| NAT Gateway               | Outbound internet access from private subnet |
+| Application Load Balancer | Traffic distribution                         |
+| ECS Fargate               | Container orchestration                      |
+| ECR                       | Docker image repository                      |
+| RDS PostgreSQL            | Application database                         |
+| S3                        | Application object storage                   |
+| IAM Roles                 | Secure AWS service access                    |
+| CloudWatch Logs           | Container logging                            |
+
+---
+
+# Application Details
+
+## Application Stack
+
+| Component          | Version       |
+| ------------------ | ------------- |
+| Ruby               | 3.2.2         |
+| Rails              | 7.0.5         |
+| Database           | PostgreSQL 13 |
+| Container Runtime  | Docker        |
+| Container Platform | ECS Fargate   |
+
+---
+
+# Repository Structure
+
+```
+.
+├── docker
+│   ├── app
+│   │   ├── Dockerfile
+│   │   └── entrypoint.sh
+│   |
+│   └── nginx
+│       ├── Dockerfile
+│       └── default.conf
+│
+├── infrastructure
+│   |
+│   ├── modules
+│   │   ├── vpc
+│   │   ├── ecs
+│   │   ├── ecs-task
+│   │   ├── alb
+│   │   ├── rds
+│   │   ├── s3
+│   │   ├── ecr
+│   │   └── security-group
+│   |
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── README.md
+│
+└── .github
+    └── workflows
+        └── build-push-ecr.yml
+```
+
+---
+
+# Prerequisites
+
+Before deployment, install:
+
+* AWS CLI
+* Terraform
+* Docker
+* Git
+
+Configure AWS credentials:
+
+```
+aws configure
+```
+
+Required permissions:
+
+* VPC
+* ECS
+* ECR
+* RDS
+* S3
+* IAM
+* ALB
+* CloudWatch
+
+---
+
+# Docker Image Build Process
+
+GitHub Actions automatically builds and pushes the Docker image.
+
+Workflow:
+
+```
+Git Push
+   |
+   |
+GitHub Actions Trigger
+   |
+   |
+Docker Build
+   |
+   |
+Login to Amazon ECR
+   |
+   |
+Push Image to ECR
+```
+
+ECR Repository:
+
+```
+ror-app-dev-rails
+```
+
+---
+
+# Terraform Deployment
+
+Navigate to infrastructure folder:
+
+```
+cd infrastructure
+```
+
+Initialize Terraform:
+
+```
+terraform init
+```
+
+Validate configuration:
+
+```
+terraform validate
+```
+
+Review changes:
+
+```
+terraform plan
+```
+
+Deploy infrastructure:
+
+```
+terraform apply
+```
+
+---
+
+# Terraform Destroy
+
+To remove all AWS resources:
+
+```
+terraform destroy
+```
+
+---
+
+# Environment Variables
+
+The ECS task receives application configuration through environment variables.
+
+## Rails Container Variables
+
+| Variable       | Description                        |
+| -------------- | ---------------------------------- |
+| RDS_DB_NAME    | PostgreSQL database name           |
+| RDS_USERNAME   | Database username                  |
+| RDS_PASSWORD   | Database password                  |
+| RDS_HOSTNAME   | RDS endpoint                       |
+| RDS_PORT       | PostgreSQL port                    |
+| S3_BUCKET_NAME | S3 bucket name                     |
+| S3_REGION_NAME | AWS region                         |
+| LB_ENDPOINT    | Application Load Balancer endpoint |
+
+---
+
+# Security Implementation
+
+## S3 Authentication
+
+The application accesses S3 using ECS Task IAM Role.
+
+Implementation:
+
+* ECS Task Role created using Terraform
+* Least privilege S3 policy attached
+* Application does not use:
+
+  * AWS Access Key
+  * AWS Secret Key
+
+AWS SDK automatically retrieves temporary credentials from ECS Task Role.
+
+---
+
+# Database Configuration
+
+Amazon RDS PostgreSQL is deployed in private database subnets.
+
+Connection details are provided to ECS using environment variables:
+
+```
+RDS_HOSTNAME
+RDS_DB_NAME
+RDS_USERNAME
+RDS_PASSWORD
+RDS_PORT
+```
+
+---
+
+# Networking
+
+## Public Subnet
+
+Contains:
+
+* Application Load Balancer
+
+Internet access:
+
+```
+Internet
+   |
+Internet Gateway
+   |
+Public Route Table
+```
+
+---
+
+## Private Application Subnet
+
+Contains:
+
+* ECS Fargate Tasks
+
+Outbound internet access:
+
+```
+Private Subnet
+      |
+ NAT Gateway
+      |
+Internet Gateway
+```
+
+---
+
+## Private Database Subnet
+
+Contains:
+
+* PostgreSQL RDS Instance
+
+Access allowed only from ECS Security Group.
+
+---
+
+# Access Application
+
+After deployment:
+
+1. Open AWS Console
+2. Navigate to EC2 → Load Balancers
+3. Copy ALB DNS name
+
+Example:
+
+```
+http://<ALB-DNS-NAME>
+```
+
+---
+
+# Monitoring
+
+Application logs are sent to:
+
+```
+Amazon CloudWatch Logs
+```
+
+Monitoring includes:
+
+* ECS task logs
+* Application errors
+* Container status
+
+---
+
+# Deployment Screenshots
+
+Include:
+
+* GitHub Actions successful build
+* ECR image
+* ECS Cluster
+* ECS Service
+* Running Tasks
+* ALB Target Group Healthy
+* RDS Instance
+* S3 Bucket
+* Application running through ALB
+
+---
+
+# Conclusion
+
+This implementation provides a scalable and secure deployment of a Ruby on Rails application using AWS ECS Fargate, Terraform, Docker, and GitHub Actions following Infrastructure as Code and DevOps best practices.
