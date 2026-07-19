@@ -80,3 +80,20 @@ module "alb" {
   public_subnet_ids     = module.vpc.public_subnet_ids
   alb_security_group_id = module.security_group.alb_security_group_id
 }
+
+module "ecs_task" {
+
+  source = "./modules/ecs-task"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  aws_region = var.aws_region
+
+  repository_url = module.ecr.repository_url
+
+  execution_role_arn = module.iam.execution_role_arn
+  task_role_arn      = module.iam.task_role_arn
+
+  log_group_name = module.cloudwatch.log_group_name
+}
