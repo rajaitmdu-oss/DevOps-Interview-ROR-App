@@ -20,3 +20,19 @@ module "security_group" {
 
   vpc_id = module.vpc.vpc_id
 }
+
+module "rds" {
+
+  source = "./modules/rds"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  private_db_subnet_ids = module.vpc.private_db_subnet_ids
+
+  rds_security_group_id = module.security_group.rds_security_group_id
+
+  db_name     = var.db_name
+  db_username = var.db_username
+  db_password = var.db_password
+}

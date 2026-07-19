@@ -35,7 +35,7 @@ resource "aws_security_group" "ecs" {
 
   name        = "${local.name_prefix}-ecs-sg"
   description = "ECS Tasks"
-  vpc_id = var.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
 
